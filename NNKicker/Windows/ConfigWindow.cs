@@ -39,7 +39,7 @@ public class ConfigWindow : Window, IDisposable
             KickTimer.Stop();
             KickTimer.Dispose();
             Plugin.Framework.Update -= Plugin.Instance.OnFrameworkUpdate;
-            isOnKicking = true;
+            isOnKicking = false;
         }
         else
         {
