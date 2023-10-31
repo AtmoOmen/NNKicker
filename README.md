@@ -17,5 +17,5 @@
 ## 仓库链接
 
 ```
-https://raw.githubusercontent.com/AtmoOmen/DalamudPlugins/main/pluginmaster.json
+https://github.com/AtmoOmen/DalamudPlugins
 ```
