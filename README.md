@@ -13,3 +13,9 @@
 ## 自编译
 
 自己整个 ClickLib 丢进去，默认 API8，API9 自己改改就行 ~~(国际服死人新频有什么挤的必要吗)~~
+
+## 仓库链接
+
+```
+https://raw.githubusercontent.com/AtmoOmen/DalamudPlugins/main/pluginmaster.json
+```
