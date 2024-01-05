@@ -1,5 +1,4 @@
 using System;
-using System.Numerics;
 using System.Threading.Tasks;
 using Dalamud.Game.AddonLifecycle;
 using Dalamud.Interface.Windowing;
@@ -18,7 +17,8 @@ public class ConfigWindow : Window, IDisposable
     private bool isOnKicking;
     private bool stopFlag;
     private uint originalVolume;
-    private bool isMuteSystemSound;
+    private bool isMuteSystemSound = true;
+    private int kickFrequency = 500;
 
     public ConfigWindow(Plugin plugin) : base(
         "Novice Network Kicker",
@@ -46,6 +46,7 @@ public class ConfigWindow : Window, IDisposable
         }
         ImGui.SetWindowFontScale(1f);
 
+        ImGui.SameLine();
         ImGui.TextColored(ImGuiColors.DalamudYellow, "尝试次数:");
 
         ImGui.SameLine();
@@ -53,8 +54,14 @@ public class ConfigWindow : Window, IDisposable
 
         ImGui.Separator();
 
-        ImGui.Checkbox("禁用系统音", ref isMuteSystemSound);
+        ImGui.Checkbox("过程中禁用系统音", ref isMuteSystemSound);
         ImGuiComponents.HelpMarker("成功挤入/停止后将会自动恢复原音量");
+
+        ImGui.SetNextItemWidth(150f);
+        ImGui.InputInt("尝试间隔 (单位: ms)", ref kickFrequency);
+        ImGuiComponents.HelpMarker("过低的间隔不会让你的成功率变高\n" +
+                                   "只会增加你的电脑负荷\n" +
+                                   "推荐间隔: 500ms 至 1000ms");
     }
 
     private void StartKickerHandler()
@@ -64,7 +71,7 @@ public class ConfigWindow : Window, IDisposable
         stopFlag = false;
 
         Plugin.GameConfig.TryGet(SystemConfigOption.SoundSystem, out originalVolume);
-        Plugin.GameConfig.System.Set("SoundSystem", 0);
+        if (isMuteSystemSound) Plugin.GameConfig.System.Set("SoundSystem", 0);
 
         Plugin.AddonLifecycle.RegisterListener(AddonEvent.PostSetup, "SelectYesno", ClickYesButton);
 
@@ -98,7 +105,7 @@ public class ConfigWindow : Window, IDisposable
             }
         }
 
-        Task.Delay(500).ContinueWith(t => CheckJoinState());
+        Task.Delay(kickFrequency).ContinueWith(t => CheckJoinState());
     }
 
     public void ClickYesButton(AddonEvent type, AddonArgs args)
