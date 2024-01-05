@@ -4,9 +4,7 @@ using Dalamud.Game.Gui;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Plugin;
-using NNKicker.Windows;
-using ClickLib.Bases;
-using ClickLib.Clicks;
+using Dalamud.Plugin.Services;
 
 namespace NNKicker
 {
@@ -14,33 +12,36 @@ namespace NNKicker
     {
         public string Name => "NNKicker";
         private const string CommandName = "/NNK";
+        private const string CommandName2 = "/nnk";
 
         private DalamudPluginInterface PluginInterface { get; init; }
         private CommandManager CommandManager { get; init; }
-        public static Plugin Instance = null!;
-        [PluginService] public static Framework Framework { get; set; } = null!;
-        [PluginService] public static GameGui GameGui { get; set; } = null!;
-        public Configuration Configuration { get; init; }
-        public WindowSystem WindowSystem = new("NNKicker");
-
         private ConfigWindow ConfigWindow { get; init; }
 
-        public Plugin(
-            [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface,
-            [RequiredVersion("1.0")] CommandManager commandManager)
+        public static Plugin Instance = null!;
+
+        [PluginService] public static GameGui GameGui { get; set; } = null!;
+        [PluginService] public static IAddonLifecycle AddonLifecycle { get; set; } = null!;
+        [PluginService] public static IGameConfig GameConfig { get; set; } = null!;
+
+        public WindowSystem WindowSystem = new("NNKicker");
+
+
+        public Plugin(DalamudPluginInterface pluginInterface, CommandManager commandManager)
         {
             Instance = this;
             PluginInterface = pluginInterface;
             CommandManager = commandManager;
 
-            Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
-            Configuration.Initialize(PluginInterface);
-
             ConfigWindow = new ConfigWindow(this);
-
             WindowSystem.AddWindow(ConfigWindow);
 
             CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
+            {
+                HelpMessage = "主界面"
+            });
+
+            CommandManager.AddHandler(CommandName2, new CommandInfo(OnCommand)
             {
                 HelpMessage = "主界面"
             });
@@ -49,25 +50,9 @@ namespace NNKicker
             PluginInterface.UiBuilder.OpenConfigUi += DrawConfigUI;
         }
 
-        internal void OnFrameworkUpdate(Framework framework)
+        private void DrawUI()
         {
-            var SYN = Plugin.GameGui.GetAddonByName("SelectYesno");
-            if (SYN != nint.Zero)
-            {
-                ClickSelectOk clickSelectOk = new(SYN);
-                clickSelectOk.Ok();
-            }
-        }
-
-        public void Dispose()
-        {
-            WindowSystem.RemoveAllWindows();
-
-            ConfigWindow.Dispose();
-
-            CommandManager.RemoveHandler(CommandName);
-
-            Framework.Update -= OnFrameworkUpdate;
+            WindowSystem.Draw();
         }
 
         private void OnCommand(string command, string args)
@@ -75,14 +60,17 @@ namespace NNKicker
             ConfigWindow.IsOpen = true;
         }
 
-        private void DrawUI()
-        {
-            WindowSystem.Draw();
-        }
-
         public void DrawConfigUI()
         {
             ConfigWindow.IsOpen = true;
+        }
+
+        public void Dispose()
+        {
+            WindowSystem.RemoveAllWindows();
+            ConfigWindow.Dispose();
+            CommandManager.RemoveHandler(CommandName);
+            CommandManager.RemoveHandler(CommandName2);
         }
     }
 }

@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Authors></Authors>
     <Company></Company>
-    <Version>0.0.0.1</Version>
+    <Version>0.0.0.2</Version>
     <Description>Used to kick in Novice Network</Description>
     <Copyright></Copyright>
     <PackageProjectUrl>https://github.com/goatcorp/SamplePlugin</PackageProjectUrl>
@@ -28,7 +28,7 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <DalamudLibPath>E:\Program Files (x86)\Dalamud.Updater.exe_v1.0.4.4\addon\Hooks\dev\</DalamudLibPath>
+    <DalamudLibPath>E:\Program Files (x86)\XIVLauncherCN\Roaming\addon\Hooks\dev\</DalamudLibPath>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
   
