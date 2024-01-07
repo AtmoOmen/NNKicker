@@ -15,10 +15,9 @@ public class ConfigWindow : Window, IDisposable
 {
     private int kickTimes;
     private bool isOnKicking;
-    private bool stopFlag;
     private uint originalVolume;
-    private bool isMuteSystemSound = true;
-    private int kickFrequency = 500;
+    public bool IsMuteSystemSound = true;
+    public int KickFrequency = 500;
 
     public ConfigWindow(Plugin plugin) : base(
         "Novice Network Kicker",
@@ -30,48 +29,47 @@ public class ConfigWindow : Window, IDisposable
     public override void Draw()
     {
         ImGui.SetWindowFontScale(1.5f);
-        if (!isOnKicking)
+        if (ImGui.Button(isOnKicking ? "停止" : "一键开挤"))
         {
-            if (ImGui.Button("一键开挤"))
-            {
-                StartKickerHandler();
-            }
-        }
-        else
-        {
-            if (ImGui.Button("停止"))
-            {
-                EndKickerHandler();
-            }
+            isOnKicking = !isOnKicking;
+            HandleKickerState();
         }
         ImGui.SetWindowFontScale(1f);
 
         ImGui.SameLine();
         ImGui.TextColored(ImGuiColors.DalamudYellow, "尝试次数:");
-
         ImGui.SameLine();
         ImGui.Text(kickTimes.ToString());
 
         ImGui.Separator();
 
-        ImGui.Checkbox("过程中禁用系统音", ref isMuteSystemSound);
+        ImGui.Checkbox("过程中禁用系统音", ref IsMuteSystemSound);
         ImGuiComponents.HelpMarker("成功挤入/停止后将会自动恢复原音量");
 
         ImGui.SetNextItemWidth(150f);
-        ImGui.InputInt("尝试间隔 (单位: ms)", ref kickFrequency);
+        ImGui.InputInt("尝试间隔 (单位: ms)", ref KickFrequency);
         ImGuiComponents.HelpMarker("过低的间隔不会让你的成功率变高\n" +
                                    "只会增加你的电脑负荷\n" +
                                    "推荐间隔: 500ms 至 1000ms");
     }
 
+    private void HandleKickerState()
+    {
+        if (isOnKicking)
+        {
+            StartKickerHandler();
+        }
+        else
+        {
+            EndKickerHandler();
+        }
+    }
+
     private void StartKickerHandler()
     {
-        isOnKicking = true;
         kickTimes = 0;
-        stopFlag = false;
-
         Plugin.GameConfig.TryGet(SystemConfigOption.SoundSystem, out originalVolume);
-        if (isMuteSystemSound) Plugin.GameConfig.System.Set("SoundSystem", 0);
+        if (IsMuteSystemSound) Plugin.GameConfig.System.Set("SoundSystem", 0);
 
         Plugin.AddonLifecycle.RegisterListener(AddonEvent.PostSetup, "SelectYesno", ClickYesButton);
 
@@ -80,7 +78,6 @@ public class ConfigWindow : Window, IDisposable
 
     private void EndKickerHandler()
     {
-        stopFlag = true;
         isOnKicking = false;
 
         Plugin.GameConfig.System.Set("SoundSystem", originalVolume);
@@ -105,7 +102,7 @@ public class ConfigWindow : Window, IDisposable
             }
         }
 
-        Task.Delay(kickFrequency).ContinueWith(t => CheckJoinState());
+        Task.Delay(KickFrequency).ContinueWith(t => CheckJoinState());
     }
 
     public void ClickYesButton(AddonEvent type, AddonArgs args)
@@ -120,10 +117,9 @@ public class ConfigWindow : Window, IDisposable
 
     private void CheckJoinState()
     {
-        if (stopFlag)
+        if (!isOnKicking)
         {
             EndKickerHandler();
-            stopFlag = false;
             return;
         }
 
@@ -131,13 +127,19 @@ public class ConfigWindow : Window, IDisposable
         if (BGNL != nint.Zero)
         {
             EndKickerHandler();
-            stopFlag = false;
         }
-        else ClickNoviceNetworkButton();
+        else
+        {
+            ClickNoviceNetworkButton();
+        }
     }
 
     public void Dispose()
     {
+        if (isOnKicking)
+        {
+            EndKickerHandler();
+        }
         Plugin.AddonLifecycle.UnregisterListener(AddonEvent.PostSetup, "SelectYesno", ClickYesButton);
     }
 }
