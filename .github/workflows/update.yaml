@@ -36,45 +36,11 @@ jobs:
             echo "PERSONAL_ACCESS_TOKEN is set."
           fi
 
-      - name: Update main repository
+      - name: Trigger Target Repo Workflow
         run: |
-          const github = require('@actions/github').getOctokit(process.env.PERSONAL_ACCESS_TOKEN);
-
-          const pluginName = 'NNKicker';
-          const version = '${{ steps.get-release.outputs.tag }}';
-          const owner = 'AtmoOmen';
-          const repo = 'DalamudPlugins';
-          const path = 'pluginmaster.json';
-          const branch = 'main';
-          const message = `Update ${pluginName} to ${version}`;
-          const downloadUrl = '${{ steps.get-release.outputs.url }}';
-
-          github.repos.getContent({
-            owner,
-            repo,
-            path,
-            ref: branch,
-          }).then(file => {
-            const content = Buffer.from(file.data.content, 'base64').toString();
-            const json = JSON.parse(content);
-
-            const item = json.plugins.find(p => p.Name === pluginName);
-            if (item) {
-              item.DownloadLinkInstall = downloadUrl;
-              item.DownloadLinkTesting = downloadUrl;
-              item.DownloadLinkUpdate = downloadUrl;
-              item.Version = version;
-            }
-
-            github.repos.createOrUpdateFileContents({
-              owner,
-              repo,
-              path,
-              message,
-              content: Buffer.from(JSON.stringify(json, null, 2)).toString('base64'),
-              sha: file.data.sha,
-              branch,
-            });
-          });
+          curl -X POST -H "Authorization: token ${{ secrets.PERSONAL_ACCESS_TOKEN }}" \
+          -H "Accept: application/vnd.github.everest-preview+json" \
+          --data '{"event_type": "update-plugin", "client_payload": {"tag": "${{ steps.get-release.outputs.tag }}", "url": "${{ steps.get-release.outputs.url }}"} }' \
+          https://api.github.com/repos/AtmoOmen/DalamudPlugins/dispatches
         env:
           PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
