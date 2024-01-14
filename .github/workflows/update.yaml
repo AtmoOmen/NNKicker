@@ -28,6 +28,14 @@ jobs:
           echo "::set-output name=url::$LATEST_RELEASE_URL"
           echo "::set-output name=tag::$LATEST_RELEASE_TAG"
 
+      - name: Check if PERSONAL_ACCESS_TOKEN is set
+        run: |
+          if [ -z "${{ secrets.PERSONAL_ACCESS_TOKEN }}" ]; then
+            echo "PERSONAL_ACCESS_TOKEN is not set."
+          else
+            echo "PERSONAL_ACCESS_TOKEN is set."
+          fi
+
       - name: Update main repository
         run: |
           const github = require('@actions/github').getOctokit(process.env.PERSONAL_ACCESS_TOKEN);
