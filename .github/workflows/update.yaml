@@ -11,6 +11,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      - name: Install dependencies
+        run: npm install @octokit/rest
+
       - name: Get the latest release info
         id: get-release
         run: |
@@ -21,26 +29,25 @@ jobs:
           echo "::set-output name=tag::$LATEST_RELEASE_TAG"
 
       - name: Update main repository
-        uses: actions/github-script@v4
-        with:
-          github-token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          script: |
-            const pluginName = 'NNKicker';
-            const version = '${{ steps.get-release.outputs.tag }}';
-            const owner = 'AtmoOmen';
-            const repo = 'DalamudPlugins';
-            const path = 'pluginmaster.json';
-            const branch = 'main';
-            const message = `Update ${pluginName} to ${version}`;
-            const downloadUrl = '${{ steps.get-release.outputs.url }}';
+        run: |
+          const { Octokit } = require("@octokit/rest");
+          const octokit = new Octokit({ auth: process.env.PERSONAL_ACCESS_TOKEN });
 
-            const file = await github.rest.repos.getContent({
-              owner,
-              repo,
-              path,
-              ref: branch,
-            });
+          const pluginName = 'NNKicker';
+          const version = '${{ steps.get-release.outputs.tag }}';
+          const owner = 'AtmoOmen';
+          const repo = 'DalamudPlugins';
+          const path = 'pluginmaster.json';
+          const branch = 'main';
+          const message = `Update ${pluginName} to ${version}`;
+          const downloadUrl = '${{ steps.get-release.outputs.url }}';
 
+          octokit.repos.getContent({
+            owner,
+            repo,
+            path,
+            ref: branch,
+          }).then(file => {
             const content = Buffer.from(file.data.content, 'base64').toString();
             const json = JSON.parse(content);
 
@@ -52,7 +59,7 @@ jobs:
               item.Version = version;
             }
 
-            await github.rest.repos.createOrUpdateFileContents({
+            octokit.repos.createOrUpdateFileContents({
               owner,
               repo,
               path,
@@ -61,3 +68,6 @@ jobs:
               sha: file.data.sha,
               branch,
             });
+          });
+        env:
+          PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
