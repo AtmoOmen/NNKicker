@@ -38,7 +38,7 @@ jobs:
 
       - name: Trigger Target Repo Workflow
         run: |
-          pluginName = 'NNKicker';
+          pluginName="NNKicker"
 
           curl -X POST -H "Authorization: token ${{ secrets.PERSONAL_ACCESS_TOKEN }}" \
           -H "Accept: application/vnd.github.everest-preview+json" \
