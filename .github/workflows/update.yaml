@@ -1,0 +1,57 @@
+name: Update Main Repo
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  update-main-repo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Get the latest release info
+        id: get-release
+        run: |
+          LATEST_RELEASE_URL=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -r '.assets[0].browser_download_url')
+          echo "::set-output name=url::$LATEST_RELEASE_URL"
+
+      - name: Update main repository
+        uses: actions/github-script@v3
+        with:
+          github-token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          script: |
+            const owner = 'AtmoOmen';
+            const repo = 'DalamudPlugins';
+            const path = 'pluginmaster.json';
+            const branch = 'main';
+            const message = 'Update download URL';
+            // 需要修改
+            const subRepoName = 'NNKicker';
+            const downloadUrl = '${{ steps.get-release.outputs.url }}';
+
+            const file = await github.rest.repos.getContent({
+              owner,
+              repo,
+              path,
+              ref: branch,
+            });
+
+            const content = Buffer.from(file.data.content, 'base64').toString();
+            const json = JSON.parse(content);
+
+            const item = json.plugins.find(p => p.name === subRepoName);
+            if (item) {
+              item.download_url = downloadUrl;
+            }
+
+            await github.rest.repos.createOrUpdateFileContents({
+              owner,
+              repo,
+              path,
+              message,
+              content: Buffer.from(JSON.stringify(json, null, 2)).toString('base64'),
+              sha: file.data.sha,
+              branch,
+            });
