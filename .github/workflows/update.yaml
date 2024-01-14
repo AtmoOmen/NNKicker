@@ -15,20 +15,22 @@ jobs:
         id: get-release
         run: |
           LATEST_RELEASE_URL=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -r '.assets[0].browser_download_url')
+          LATEST_RELEASE_TAG=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -r '.tag_name')
           echo "::set-output name=url::$LATEST_RELEASE_URL"
+          echo "::set-output name=tag::$LATEST_RELEASE_TAG"
 
       - name: Update main repository
         uses: actions/github-script@v3
         with:
           github-token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           script: |
+            const pluginName = 'NNKicker';
+            const version = '${{ steps.get-release.outputs.tag }}';
             const owner = 'AtmoOmen';
             const repo = 'DalamudPlugins';
             const path = 'pluginmaster.json';
             const branch = 'main';
-            const message = 'Update download URL';
-            // 需要修改
-            const subRepoName = 'NNKicker';
+            const message = `Update ${pluginName} to ${version}`;
             const downloadUrl = '${{ steps.get-release.outputs.url }}';
 
             const file = await github.rest.repos.getContent({
@@ -41,9 +43,12 @@ jobs:
             const content = Buffer.from(file.data.content, 'base64').toString();
             const json = JSON.parse(content);
 
-            const item = json.plugins.find(p => p.name === subRepoName);
+            const item = json.plugins.find(p => p.Name === pluginName);
             if (item) {
-              item.download_url = downloadUrl;
+              item.DownloadLinkInstall = downloadUrl;
+              item.DownloadLinkTesting = downloadUrl;
+              item.DownloadLinkUpdate = downloadUrl;
+              item.Version = version;
             }
 
             await github.rest.repos.createOrUpdateFileContents({
