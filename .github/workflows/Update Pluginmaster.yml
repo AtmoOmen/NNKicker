@@ -11,28 +11,29 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Setup Node.js and Install dependencies
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '16'
+
+      - name: Install dependencies
         run: npm install @actions/github
 
-      - name: Get the latest release info and Trigger Target Repo Workflow
+      - name: Get the latest release info
+        id: get-release
         run: |
           LATEST_RELEASE_INFO=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest)
           LATEST_RELEASE_URL=$(echo $LATEST_RELEASE_INFO | jq -r '.assets[0].browser_download_url')
           LATEST_RELEASE_TAG=$(echo $LATEST_RELEASE_INFO | jq -r '.tag_name')
           DOWNLOAD_COUNT=$(echo $LATEST_RELEASE_INFO | jq -r '[.assets[].download_count] | @csv')
+          echo "LATEST_RELEASE_URL=$LATEST_RELEASE_URL" >> $GITHUB_ENV
+          echo "LATEST_RELEASE_TAG=$LATEST_RELEASE_TAG" >> $GITHUB_ENV
+          echo "DOWNLOAD_COUNT=$DOWNLOAD_COUNT" >> $GITHUB_ENV
 
-          if [ -z "${{ secrets.PERSONAL_ACCESS_TOKEN }}" ]; then
-            echo "PERSONAL_ACCESS_TOKEN is not set."
-            exit 1
-          fi
-
-          pluginName="NNKicker";
+      - name: Trigger Target Repo Workflow
+        if: env.PERSONAL_ACCESS_TOKEN != ''
+        run: |
           curl -X POST -H "Authorization: token ${{ secrets.PERSONAL_ACCESS_TOKEN }}" \
           -H "Accept: application/vnd.github.everest-preview+json" \
-          --data '{"event_type": "update-plugin", "client_payload": {"tag": "'$LATEST_RELEASE_TAG'", "url": "'$LATEST_RELEASE_URL'", "name": "'$pluginName'", "downloadcount": "'$DOWNLOAD_COUNT'"}}' \
+          --data '{"event_type": "update-plugin", "client_payload": {"tag": "'$LATEST_RELEASE_TAG'", "url": "'$LATEST_RELEASE_URL'", "name": "NNKicker", "downloadcount": "'$DOWNLOAD_COUNT'"}}' \
           https://api.github.com/repos/AtmoOmen/DalamudPlugins/dispatches
-        env:
-          PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
