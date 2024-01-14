@@ -1,4 +1,4 @@
-name: Update Main Repo
+name: Dispatch
 
 on:
   release:
