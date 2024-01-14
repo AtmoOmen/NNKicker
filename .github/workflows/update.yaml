@@ -21,7 +21,7 @@ jobs:
           echo "::set-output name=tag::$LATEST_RELEASE_TAG"
 
       - name: Update main repository
-        uses: actions/github-script@v5
+        uses: actions/github-script@v4
         with:
           github-token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           script: |
