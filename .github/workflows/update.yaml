@@ -9,18 +9,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v5
 
       - name: Get the latest release info
         id: get-release
         run: |
-          LATEST_RELEASE_URL=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -r '.assets[0].browser_download_url')
-          LATEST_RELEASE_TAG=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -r '.tag_name')
+          LATEST_RELEASE_INFO=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest)
+          LATEST_RELEASE_URL=$(echo $LATEST_RELEASE_INFO | jq -r '.assets[0].browser_download_url')
+          LATEST_RELEASE_TAG=$(echo $LATEST_RELEASE_INFO | jq -r '.tag_name')
           echo "::set-output name=url::$LATEST_RELEASE_URL"
           echo "::set-output name=tag::$LATEST_RELEASE_TAG"
 
       - name: Update main repository
-        uses: actions/github-script@v3
+        uses: actions/github-script@v5
         with:
           github-token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           script: |
