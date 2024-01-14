@@ -38,9 +38,11 @@ jobs:
 
       - name: Trigger Target Repo Workflow
         run: |
+          pluginName = 'NNKicker';
+
           curl -X POST -H "Authorization: token ${{ secrets.PERSONAL_ACCESS_TOKEN }}" \
           -H "Accept: application/vnd.github.everest-preview+json" \
-          --data '{"event_type": "update-plugin", "client_payload": {"tag": "${{ steps.get-release.outputs.tag }}", "url": "${{ steps.get-release.outputs.url }}"} }' \
+          --data '{"event_type": "update-plugin", "client_payload": {"tag": "${{ steps.get-release.outputs.tag }}", "url": "${{ steps.get-release.outputs.url }}"} }', "name": "$pluginName" \
           https://api.github.com/repos/AtmoOmen/DalamudPlugins/dispatches
         env:
           PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
