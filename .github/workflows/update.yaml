@@ -17,7 +17,7 @@ jobs:
           node-version: '16'
 
       - name: Install dependencies
-        run: npm install @octokit/rest
+        run: npm install @actions/github
 
       - name: Get the latest release info
         id: get-release
@@ -30,8 +30,7 @@ jobs:
 
       - name: Update main repository
         run: |
-          const { Octokit } = require("@octokit/rest");
-          const octokit = new Octokit({ auth: process.env.PERSONAL_ACCESS_TOKEN });
+          const github = require('@actions/github').getOctokit(process.env.PERSONAL_ACCESS_TOKEN);
 
           const pluginName = 'NNKicker';
           const version = '${{ steps.get-release.outputs.tag }}';
@@ -42,7 +41,7 @@ jobs:
           const message = `Update ${pluginName} to ${version}`;
           const downloadUrl = '${{ steps.get-release.outputs.url }}';
 
-          octokit.repos.getContent({
+          github.repos.getContent({
             owner,
             repo,
             path,
@@ -59,7 +58,7 @@ jobs:
               item.Version = version;
             }
 
-            octokit.repos.createOrUpdateFileContents({
+            github.repos.createOrUpdateFileContents({
               owner,
               repo,
               path,
