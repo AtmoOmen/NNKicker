@@ -12,6 +12,6 @@ public class ClickNNButton(IntPtr addon = default) : ClickBase<ClickNNButton>("C
 
     public void Click(int index)
     {
-        FireCallback(3);
+        FireCallback(index);
     }
 }

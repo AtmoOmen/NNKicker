@@ -97,7 +97,7 @@ public class ConfigWindow : Window, IDisposable
             var buttonNode = cl->GetComponentNodeById(12);
             if (buttonNode != null)
             {
-                clickNnButton.PerformButtonClick(cln);
+                clickNnButton.PerformButtonClick();
                 kickTimes++;
             }
         }
